@@ -1,0 +1,13 @@
+version: '1.0'
+
+services:
+  app:
+    build: .
+    container_name: relic_interview
+    volumes:
+      - .:/home/node/app
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    command: [ "sh" ]

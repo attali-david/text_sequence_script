@@ -1,0 +1,34 @@
+## DESCRIPTION
+This project processes text files or standard input to identify and list the most frequent three-word sequences with support for unicode. The program can handle multiple files in parallel using worker threads.
+
+## Requirements
+- Node.js (version 18 or later)
+- npm (Node package manager)
+
+## INSTRUCTIONS
+Command line manual with examples:
+    - ./index.js -h for a command line manual
+Process text from stin:
+    - cat file1.txt | node index.js
+Process text from two files:
+    - node index.js -f file1.txt file2.txt
+Process text from two files using two threads:
+    - node index.js -f file1.txt file2.txt -t 2
+
+## DOCKER
+docker-compose up -d --build
+docker attach relic_interview
+
+## TEST
+- npm test
+
+## FURTHER WORK
+- Improve error handling for a better user experience
+- Explore performance optimizations for larger files
+- Add more test
+- Support more file formats
+
+## KNOWN ISSUES
+- The version of Moby Dick Vol. 1 Justin provided has formatting errors that the script does not handle. For example, "The  White  Whale  's" will be formatted as "the white whale 's" when it should be "the white whale's". It would require a lot more fine tuning to first fix the errors in the text given the use of contractions like "'tis".
+- Specifying a thread count higher than the number of CPU cores leads to warnings but should not affect the program's functionality.
+- The program currently does not validate input file paths rigorously.
