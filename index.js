@@ -23,7 +23,8 @@ async function main() {
             description: 'Number of threads to use.',
         })
         .example('$0 -f file1.txt file2.txt', 'Process text from file1.txt and file2.txt')
-        .example('$0 -f file1.txt file2.txt -t 2', 'Process text from file1.txt and file2.txt using 2 threads')
+        .example('$0 -f file1.txt file2.txt', 'Process text from file1.txt and file2.txt outputting a single list')
+        .example('$0 -f file1.txt file2.txt -t 2', 'Process text from file1.txt and file2.txt using 2 threads ouputting list for each file')
         .example('cat file1.txt | $0', 'Process text from standard input')
         .help('help')
         .alias('help', 'h')
@@ -45,11 +46,10 @@ async function main() {
         // User specified file path without providing -f or --files
         throw new Error('Input given without specifying --files (-f) option.')
     }
-
     let topSequences = []
     if (argv.files && argv.files.length > 0) {
         // Read from arguments
-        topSequences = await processFiles(argv.files, THREAD_COUNT);
+        topSequences = !!argv.threads ? await processFilesInParallel(argv.files, THREAD_COUNT) : await processFilesAsOne(argv.files)
     } else {
         // Read from stdin
         const text = await processStdIn()
@@ -131,10 +131,36 @@ async function processStdIn() {
 /**
  * Processes files using N threads
  * @param {Array} files - Array of file paths
- * @param {number} threadCount - Number of threads to use
- * @returns {Promise<Array>} - Promise resolving with the top sequences from all files
+ * @returns {Array} - Top sequences from all files
  */
-async function processFiles(files, threadCount) {
+async function processFilesAsOne(files) {
+    let text = '';
+    let invalidFiles = []
+    for (const file of files) {
+        if (!file.endsWith('.txt')) {
+            invalidFiles.push(file)
+            continue
+        }
+        const data = await fs.promises.readFile(file, 'utf8');
+        text += ` ${formatText(data)}`;
+    }
+    const analyzedText = analyzeText(text.trim())
+    if (invalidFiles.length) {
+        console.log(`Invalid input: ${invalidFiles.join(', ')}\nThis program only accepts .txt files.`)
+    }
+    const topSequences = [{ file: files, sequences: analyzedText }]
+
+    return topSequences
+}
+
+
+/**
+ * Processes files using N threads
+ * @param {Array} files - Array of file paths
+ * @param {number} threadCount - Number of threads to use
+ * @returns {Array} - Top sequences from all files
+ */
+async function processFilesInParallel(files, threadCount) {
     const fileChunks = splitArrayToNChunks(files, threadCount)
     let topSequencesPromises = fileChunks.map(chunk => createWorker(chunk));
     const fileOutput = await Promise.all(topSequencesPromises)

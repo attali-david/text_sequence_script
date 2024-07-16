@@ -18,7 +18,6 @@ async function processAndAnalyzeFiles() {
         const data = await fs.promises.readFile(file, 'utf8');
         const formattedText = formatText(data)
 
-        fs.writeFileSync('./output.txt', formattedText)
         sequences.push({ file, sequences: analyzeText(formattedText) })
     }
     parentPort.postMessage({ invalidFiles, sequences });

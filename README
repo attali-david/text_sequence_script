@@ -1,5 +1,6 @@
 ## DESCRIPTION
-This project processes text files or standard input to identify and list the most frequent three-word sequences with support for unicode. The program can handle multiple files in parallel using worker threads.
+This project processes text files or standard input to identify and list the most frequent three-word sequences with support for unicode. The program can output a single list for all inputs. The program can also handle analyzing sequences in multiple files in parallel ouputting separate lists for each.
+
 
 ## Requirements
 - Node.js (version 18 or later)
@@ -12,10 +13,10 @@ Command line manual with examples:
     - ./index.js -h for a command line manual
 Process text from stin:
     - cat file1.txt | node index.js
-Process text from two files:
+Process text from two files outputting one list:
     - node index.js -f file1.txt file2.txt
-Process text from two files using two threads:
-    - node index.js -f file1.txt file2.txt -t 2
+Process text from two files using two threads outputting multiple lists:
+    - node index.js -f file1.txt file2.txt -t 2 -m
 
 ## DOCKER
 docker-compose up -d --build
