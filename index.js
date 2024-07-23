@@ -22,6 +22,12 @@ async function main() {
             type: 'number',
             description: 'Number of threads to use.',
         })
+        .option('multiple', {
+            alias: 'm',
+            type: 'boolean',
+            description: 'List each file separately.',
+            default: false
+        })
         .example('$0 -f file1.txt file2.txt', 'Process text from file1.txt and file2.txt')
         .example('$0 -f file1.txt file2.txt', 'Process text from file1.txt and file2.txt outputting a single list')
         .example('$0 -f file1.txt file2.txt -t 2', 'Process text from file1.txt and file2.txt using 2 threads ouputting list for each file')
@@ -49,7 +55,7 @@ async function main() {
     let topSequences = []
     if (argv.files && argv.files.length > 0) {
         // Read from arguments
-        topSequences = !!argv.threads ? await processFilesInParallel(argv.files, THREAD_COUNT) : await processFilesAsOne(argv.files)
+        topSequences = !!argv.threads ? await processFilesInParallel(argv.files, THREAD_COUNT, argv.multiple) : await processFilesAsOne(argv.files)
     } else {
         // Read from stdin
         const text = await processStdIn()
@@ -160,23 +166,43 @@ async function processFilesAsOne(files) {
  * @param {number} threadCount - Number of threads to use
  * @returns {Array} - Top sequences from all files
  */
-async function processFilesInParallel(files, threadCount) {
+async function processFilesInParallel(files, threadCount, multiple) {
     const fileChunks = splitArrayToNChunks(files, threadCount)
     let topSequencesPromises = fileChunks.map(chunk => createWorker(chunk));
     const fileOutput = await Promise.all(topSequencesPromises)
 
     const invalidFiles = []
-    const topSequences = []
+    const topSequencesSeparate = []
     fileOutput.forEach(ts => {
         invalidFiles.push(...ts.invalidFiles);
-        ts.sequences.forEach(s => topSequences.push({ file: s.file, sequences: s.sequences }))
+        ts.sequences.forEach(s => topSequencesSeparate.push({ file: s.file, sequences: s.sequences }))
     });
 
     if (invalidFiles.length) {
         console.log(`Invalid input: ${invalidFiles.join(', ')}\nThis program only accepts .txt files.`)
     }
 
-    return topSequences
+    if (multiple) {
+        return topSequencesSeparate.map(ts => {
+            return {
+                file: ts.file,
+                sequences: getTopSequences(ts.sequences)
+            }
+        })
+    } else {
+        return [{ file: files.join(', '), sequences: mapSeparateSequences(topSequencesSeparate) }]
+    }
+}
+
+function mapSeparateSequences(topSequences) {
+    const sequenceMaps = new Map()
+
+    for (let { sequences } of topSequences) {
+        sequences.forEach((value, key) => {
+            sequenceMaps.set(key, (sequenceMaps.get(key) || 0) + value)
+        })
+    }
+    return getTopSequences(sequenceMaps)
 }
 
 /**

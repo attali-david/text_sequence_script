@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { workerData, parentPort } = require("worker_threads");
-const { formatText, analyzeText } = require('.')
+const { formatText, generateSequenceMap } = require('.')
 
 /**
  * Processes a list of files, filters out invalid files, and analyzes text content.
@@ -18,7 +18,7 @@ async function processAndAnalyzeFiles() {
         const data = await fs.promises.readFile(file, 'utf8');
         const formattedText = formatText(data)
 
-        sequences.push({ file, sequences: analyzeText(formattedText) })
+        sequences.push({ file, sequences: generateSequenceMap(formattedText) })
     }
     parentPort.postMessage({ invalidFiles, sequences });
 }
