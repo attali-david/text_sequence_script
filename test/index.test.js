@@ -213,9 +213,28 @@ describe('Command Line Execution', () => {
     });
 
 
+    test('should execute index.js with multiple file input in parallel ouputting one list', (done) => {
+        execFile('node', ['../index.js', '-f', 'inputs/extract_moby_dick.txt', 'inputs/short.txt',
+            'inputs/extract_moby_dick.txt', '-t', 2],
+            { cwd: __dirname }, (error, stdout, stderr) => {
+                if (error) {
+                    done(error);
+                } else {
+                    expect(stdout).toContain("TOP SEQUENCES: inputs/extract_moby_dick.txt, inputs/short.txt, inputs/extract_moby_dick.txt");
+                    expect(stdout).toContain("1. the greenland whale - 8");
+                    expect(stdout).toContain("2. greenland whale is - 6");
+                    expect(stdout).toContain("3. the great sperm - 4");
+                    expect(stdout).toContain("4. great sperm whale - 4");
+
+                    done();
+                }
+            });
+    })
+
+
     test('should execute index.js with multiple file input in parallel ouputting multiple lists', (done) => {
         execFile('node', ['../index.js', '-f', 'inputs/extract_moby_dick.txt', 'inputs/short.txt',
-            'inputs/rilke.txt', '-t', 2],
+            'inputs/rilke.txt', '-t', 2, '-m'],
             { cwd: __dirname }, (error, stdout, stderr) => {
                 if (error) {
                     done(error);
